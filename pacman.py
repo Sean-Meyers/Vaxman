@@ -2,7 +2,8 @@
 #https://github.com/hbokmann/Pacman
   
 import pygame
-  
+
+# Color Constants
 black = (0,0,0)
 white = (255,255,255)
 blue = (0,0,255)
@@ -11,6 +12,7 @@ red = (255,0,0)
 purple = (255,0,255)
 yellow   = ( 255, 255,   0)
 
+# Load Player Image
 Trollicon=pygame.image.load('images/Trollman.png')
 pygame.display.set_icon(Trollicon)
 
@@ -96,9 +98,15 @@ def setupGate(all_sprites_list):
       all_sprites_list.add(gate)
       return gate
 
-# This class represents the ball        
-# It derives from the "Sprite" class in Pygame
 class Block(pygame.sprite.Sprite):
+    """
+    This class represents the ball/dots,
+    it derives from the "Sprite" class in Pygame.
+
+    Interface:
+        self.rect.x -- X position of the block
+        self.rect.y -- Y position of the block
+    """
      
     # Constructor. Pass in the color of the block, 
     # and its x and y position
@@ -176,7 +184,6 @@ class Player(pygame.sprite.Sprite):
             #     self.rect.top=old_y
             #     print('a')
         else:
-
             self.rect.top = new_y
 
             # Did this update cause us to hit a wall?
@@ -371,6 +378,7 @@ c_w = 303+(32-16) #Clyde width
 
 def startGame():
 
+  # Construct the pygame.sprite.Group containers for holding the sprites.
   all_sprites_list = pygame.sprite.RenderPlain()
 
   block_list = pygame.sprite.RenderPlain()
@@ -421,15 +429,20 @@ def startGame():
   # Draw the grid
   for row in range(19):
       for column in range(19):
+
+          # Don't spawn blocks/dots behind the gate (ghost spawn area)
           if (row == 7 or row == 8) and (column == 8 or column == 9 or column == 10):
               continue
+
+          # Spawn the blocks/dots
           else:
             block = Block(yellow, 4, 4)
 
-            # Set a random location for the block
+            # Set the block positions so that they are spaced out
             block.rect.x = (30*column+6)+26
             block.rect.y = (30*row+6)+26
 
+            # Don't spawn a block/dot where the walls or player is
             b_collide = pygame.sprite.spritecollide(block, wall_list, False)
             p_collide = pygame.sprite.spritecollide(block, pacman_collide, False)
             if b_collide:
@@ -454,7 +467,8 @@ def startGame():
       for event in pygame.event.get():
           if event.type == pygame.QUIT:
               done=True
-
+          
+          # Increase the speed of the player once when a key is pressed
           if event.type == pygame.KEYDOWN:
               if event.key == pygame.K_LEFT:
                   Pacman.changespeed(-30,0)
@@ -465,6 +479,7 @@ def startGame():
               if event.key == pygame.K_DOWN:
                   Pacman.changespeed(0,30)
 
+          # Decrease the speed when the key is released
           if event.type == pygame.KEYUP:
               if event.key == pygame.K_LEFT:
                   Pacman.changespeed(30,0)
@@ -504,10 +519,10 @@ def startGame():
       Clyde.changespeed(Clyde_directions,"clyde",c_turn,c_steps,cl)
       Clyde.update(wall_list,False)
 
-      # See if the Pacman block has collided with anything.
+      # See if the Pacman block has collided with any blocks/dots
       blocks_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
        
-      # Check the list of collisions.
+      # Update the score based on the list of collisions.
       if len(blocks_hit_list) > 0:
           score +=len(blocks_hit_list)
       
