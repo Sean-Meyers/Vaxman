@@ -135,12 +135,15 @@ class Player(pygame.sprite.Sprite):
     change_y=0
   
     # Constructor function
-    def __init__(self,x,y, filename):
+    def __init__(self,x,y, filename, groups):
         # Call the parent's constructor
         pygame.sprite.Sprite.__init__(self)
    
         # Set height, width
         self.image = pygame.image.load(filename).convert()
+
+        # preserve filename
+        self.filename = filename
   
         # Make our top-left corner the passed-in location.
         self.rect = self.image.get_rect()
@@ -148,6 +151,9 @@ class Player(pygame.sprite.Sprite):
         self.rect.left = x
         self.prev_x = x
         self.prev_y = y
+
+        for group in groups:
+            group.add(self)
 
     # Clear the speed of the player
     def prevdirection(self):
@@ -362,7 +368,6 @@ background = background.convert()
 background.fill(black)
 
 
-
 clock = pygame.time.Clock()
 
 pygame.font.init()
@@ -375,6 +380,23 @@ m_h = (4*60)+19 #Monster height
 b_h = (3*60)+19 #Binky height
 i_w = 303-16-32 #Inky width
 c_w = 303+(32-16) #Clyde width
+
+def multiply_ghost(ghost):
+    """
+    Duplicate the ghost if it is alive.
+
+    Parameters:
+        ghost <Ghost> -- The ghost to duplicate.
+
+    Return the number of ghosts created.
+    """
+
+    if ghost.alive():
+        Ghost(ghost.rect.left, ghost.rect.top, ghost.filename, ghost.groups())
+
+        return 1
+    else:
+        return 0
 
 def startGame():
 
@@ -406,25 +428,29 @@ def startGame():
 
 
   # Create the player paddle object
-  Pacman = Player( w, p_h, "images/Trollman.png" )
-  all_sprites_list.add(Pacman)
-  pacman_collide.add(Pacman)
+  Pacman = Player( w, p_h, "images/Trollman.png",
+                                           [all_sprites_list, pacman_collide] )
+  #all_sprites_list.add(Pacman)
+  #pacman_collide.add(Pacman)
    
-  Blinky=Ghost( w, b_h, "images/Blinky.png" )
-  monsta_list.add(Blinky)
-  all_sprites_list.add(Blinky)
+  Blinky=Ghost( w, b_h, "images/Blinky.png", [monsta_list, all_sprites_list] )
+  #monsta_list.add(Blinky)
+  #all_sprites_list.add(Blinky)
 
-  Pinky=Ghost( w, m_h, "images/Pinky.png" )
-  monsta_list.add(Pinky)
-  all_sprites_list.add(Pinky)
+  Pinky=Ghost( w, m_h, "images/Pinky.png", [monsta_list, all_sprites_list] )
+  #monsta_list.add(Pinky)
+  #all_sprites_list.add(Pinky)
    
-  Inky=Ghost( i_w, m_h, "images/Inky.png" )
-  monsta_list.add(Inky)
-  all_sprites_list.add(Inky)
+  Inky=Ghost( i_w, m_h, "images/Inky.png", [monsta_list, all_sprites_list] )
+  #monsta_list.add(Inky)
+  #all_sprites_list.add(Inky)
    
-  Clyde=Ghost( c_w, m_h, "images/Clyde.png" )
-  monsta_list.add(Clyde)
-  all_sprites_list.add(Clyde)
+  Clyde=Ghost( c_w, m_h, "images/Clyde.png", [monsta_list, all_sprites_list] )
+  #monsta_list.add(Clyde)
+  #all_sprites_list.add(Clyde)
+
+  ghosts = [Blinky, Pinky, Inky, Clyde]
+  num_ghosts = len(ghosts)
 
   # Draw the grid
   for row in range(19):
@@ -461,6 +487,11 @@ def startGame():
   done = False
 
   i = 0
+  
+  # Fire a ghost_timer event every 30 seconds
+  ghost_timer_id = pygame.event.custom_type()
+  ghost_timer = pygame.event.Event(ghost_timer_id)
+  pygame.time.set_timer(ghost_timer_id, 30000)
 
   while done == False:
       # ALL EVENT PROCESSING SHOULD GO BELOW THIS COMMENT
@@ -489,6 +520,11 @@ def startGame():
                   Pacman.changespeed(0,30)
               if event.key == pygame.K_DOWN:
                   Pacman.changespeed(0,-30)
+          
+          # May not work yet
+          if event.type == ghost_timer_id:
+              for ghost in ghosts:
+                  num_ghosts += multiply_ghost(ghost)
           
       # ALL EVENT PROCESSING SHOULD GO ABOVE THIS COMMENT
    
