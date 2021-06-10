@@ -212,27 +212,72 @@ class Player(pygame.sprite.Sprite):
 
 #Inheritime Player klassist
 class Ghost(Player):
+    """
+    TODO
+    """
+
+    def __init__(self, directions, *argv, ghost=False):
+      """
+      TODO
+      """
+      self.directions = directions
+      self.ghost = ghost
+      self.turn = 0
+      self.steps = 0
+      self.dir_len = len(directions) - 1
+
+      Player.__init__(self, *argv)
+
     # Change the speed of the ghost
-    def changespeed(self,list,ghost,turn,steps,l):
+    #def changespeed(self,list,ghost,turn,steps,l):
+    #  try:
+    #    z=list[turn][2]
+    #    if steps < z:
+    #      self.change_x=list[turn][0]
+    #      self.change_y=list[turn][1]
+    #      steps+=1
+    #    else:
+    #      if turn < l:
+    #        turn+=1
+    #      elif ghost == "clyde":
+    #        turn = 2
+    #      else:
+    #        turn = 0
+    #      self.change_x=list[turn][0]
+    #      self.change_y=list[turn][1]
+    #      steps = 0
+    #    return [turn,steps]
+    #  except IndexError:
+    #     return [0,0]
+
+    def changespeed(self):
       try:
-        z=list[turn][2]
-        if steps < z:
-          self.change_x=list[turn][0]
-          self.change_y=list[turn][1]
-          steps+=1
+        z = self.directions[self.turn][2]
+        if self.steps < z:
+          self.change_x = self.directions[self.turn][0]
+          self.change_y = self.directions[self.turn][1]
+          self.steps += 1
         else:
-          if turn < l:
-            turn+=1
-          elif ghost == "clyde":
-            turn = 2
+          if self.turn < self.dir_len:
+            self.turn += 1
+          elif self.ghost == "clyde":
+            self.turn = 2
           else:
-            turn = 0
-          self.change_x=list[turn][0]
-          self.change_y=list[turn][1]
-          steps = 0
-        return [turn,steps]
+            self.turn = 0
+          self.change_x = self.directions[self.turn][0]
+          self.change_y = self.directions[self.turn][1]
+          self.steps = 0
       except IndexError:
-         return [0,0]
+        self.turn = 0
+        self.steps = 0
+
+    def move(self, walls):
+      """
+      TODO
+      """
+      self.changespeed()
+      self.changespeed()
+      self.update(walls, False)
 
 Pinky_directions = [
 [0,-30,4],
@@ -429,23 +474,27 @@ def startGame():
 
   # Create the player paddle object
   Pacman = Player( w, p_h, "images/Trollman.png",
-                                           [all_sprites_list, pacman_collide] )
+                                           [all_sprites_list, pacman_collide])
   #all_sprites_list.add(Pacman)
   #pacman_collide.add(Pacman)
    
-  Blinky=Ghost( w, b_h, "images/Blinky.png", [monsta_list, all_sprites_list] )
+  Blinky=Ghost(Blinky_directions, w, b_h, "images/Blinky.png",
+                                               [monsta_list, all_sprites_list])
   #monsta_list.add(Blinky)
   #all_sprites_list.add(Blinky)
 
-  Pinky=Ghost( w, m_h, "images/Pinky.png", [monsta_list, all_sprites_list] )
+  Pinky=Ghost(Pinky_directions, w, m_h, "images/Pinky.png",
+                                               [monsta_list, all_sprites_list])
   #monsta_list.add(Pinky)
   #all_sprites_list.add(Pinky)
    
-  Inky=Ghost( i_w, m_h, "images/Inky.png", [monsta_list, all_sprites_list] )
+  Inky=Ghost(Inky_directions, i_w, m_h, "images/Inky.png",
+                                               [monsta_list, all_sprites_list])
   #monsta_list.add(Inky)
   #all_sprites_list.add(Inky)
    
-  Clyde=Ghost( c_w, m_h, "images/Clyde.png", [monsta_list, all_sprites_list] )
+  Clyde=Ghost(Clyde_directions, c_w, m_h, "images/Clyde.png",
+                                [monsta_list, all_sprites_list], ghost="clyde")
   #monsta_list.add(Clyde)
   #all_sprites_list.add(Clyde)
 
@@ -531,29 +580,32 @@ def startGame():
       # ALL GAME LOGIC SHOULD GO BELOW THIS COMMENT
       Pacman.update(wall_list,gate)
 
-      returned = Pinky.changespeed(Pinky_directions,False,p_turn,p_steps,pl)
-      p_turn = returned[0]
-      p_steps = returned[1]
-      Pinky.changespeed(Pinky_directions,False,p_turn,p_steps,pl)
-      Pinky.update(wall_list,False)
+      for ghost in monsta_list:
+        ghost.move(wall_list)
 
-      returned = Blinky.changespeed(Blinky_directions,False,b_turn,b_steps,bl)
-      b_turn = returned[0]
-      b_steps = returned[1]
-      Blinky.changespeed(Blinky_directions,False,b_turn,b_steps,bl)
-      Blinky.update(wall_list,False)
+      #returned = Pinky.changespeed(Pinky_directions,False,p_turn,p_steps,pl)
+      #p_turn = returned[0]
+      #p_steps = returned[1]
+      #Pinky.changespeed(Pinky_directions,False,p_turn,p_steps,pl)
+      #Pinky.update(wall_list,False)
 
-      returned = Inky.changespeed(Inky_directions,False,i_turn,i_steps,il)
-      i_turn = returned[0]
-      i_steps = returned[1]
-      Inky.changespeed(Inky_directions,False,i_turn,i_steps,il)
-      Inky.update(wall_list,False)
+      #returned = Blinky.changespeed(Blinky_directions,False,b_turn,b_steps,bl)
+      #b_turn = returned[0]
+      #b_steps = returned[1]
+      #Blinky.changespeed(Blinky_directions,False,b_turn,b_steps,bl)
+      #Blinky.update(wall_list,False)
 
-      returned = Clyde.changespeed(Clyde_directions,"clyde",c_turn,c_steps,cl)
-      c_turn = returned[0]
-      c_steps = returned[1]
-      Clyde.changespeed(Clyde_directions,"clyde",c_turn,c_steps,cl)
-      Clyde.update(wall_list,False)
+      #returned = Inky.changespeed(Inky_directions,False,i_turn,i_steps,il)
+      #i_turn = returned[0]
+      #i_steps = returned[1]
+      #Inky.changespeed(Inky_directions,False,i_turn,i_steps,il)
+      #Inky.update(wall_list,False)
+
+      #returned = Clyde.changespeed(Clyde_directions,"clyde",c_turn,c_steps,cl)
+      #c_turn = returned[0]
+      #c_steps = returned[1]
+      #Clyde.changespeed(Clyde_directions,"clyde",c_turn,c_steps,cl)
+      #Clyde.update(wall_list,False)
 
       # See if the Pacman block has collided with any blocks/dots
       blocks_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
