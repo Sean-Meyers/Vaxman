@@ -437,7 +437,8 @@ def multiply_ghost(ghost):
     """
 
     if ghost.alive():
-        Ghost(ghost.rect.left, ghost.rect.top, ghost.filename, ghost.groups())
+        Ghost(ghost.directions, ghost.rect.left,
+                ghost.rect.top, ghost.filename, ghost.groups(), ghost.ghost)
 
         return 1
     else:
