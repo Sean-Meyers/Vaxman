@@ -1,7 +1,7 @@
 #Pacman in Python with PyGame
 #https://github.com/hbokmann/Pacman
 
-import random  
+import random
 import pygame
 
 # Color Constants
@@ -128,6 +128,50 @@ class Block(pygame.sprite.Sprite):
         # of rect.x and rect.y
         self.rect = self.image.get_rect()
 
+class Intersection(Block):
+    """
+    TODO
+    """
+
+    @staticmethod
+    def switcher(subset, superset1, superset2):
+        """
+        TODO
+        """
+
+        if subset.issubset(superset1):
+            return superset1
+        elif subset.issubset(superset2):
+            return superset2
+        else:
+            return subset
+
+    horizontals = frozenset({'left', 'right'})
+    verticals = frozenset({'up', 'down'})
+    switch = {horizontals:   verticals,
+              verticals  : horizontals}
+
+    def __init__(self, width, directions, color=black):
+        super().__init__(color, width, width)
+        self.directions = directions
+
+    def choose_dir(self, current_dir):
+        """
+        TODO
+        """
+
+        cls = Intersection
+        change = random.choice([True, False])
+        if change:
+            new_dir = cls.switch[cls.switcher(set({current_dir}),
+                                              cls.horizontals, cls.verticals)]
+            new_dir &= self.directions
+            if len(new_dir) > 1:
+                return random.choice(list(new_dir))
+            else:
+                return new_dir.pop()
+        else:
+            return current_dir
 
 class WallCollision(Exception):
     """
@@ -136,7 +180,6 @@ class WallCollision(Exception):
 
     def __init__(self):
       pass
-
 
 # This class represents the bar at the bottom that the player controls
 class Player(pygame.sprite.Sprite):
@@ -606,6 +649,11 @@ def startGame():
       for event in pygame.event.get():
           if event.type == pygame.QUIT:
               done=True
+
+          if event.type == pygame.MOUSEBUTTONDOWN:
+              print(event.pos)
+          if event.type == pygame.MOUSEBUTTONUP:
+              print(event.pos)
           
           # Increase the speed of the player once when a key is pressed
           if event.type == pygame.KEYDOWN:
