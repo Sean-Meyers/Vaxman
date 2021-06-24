@@ -159,7 +159,7 @@ class Intersection(Block):
         """
         TODO
         """
-
+        print('current:', current_dir, 'possible:', self.directions)
         cls = Intersection
         change = random.choice([True, False])
         if change:
@@ -169,17 +169,45 @@ class Intersection(Block):
             if len(new_dir) > 1:
                 return random.choice(list(new_dir))
             else:
-                return new_dir.pop()
+                return set(new_dir).pop()
         else:
             return current_dir
 
-class WallCollision(Exception):
+class Collision(Exception):
+    """
+    TODO
+
+    Instance Variables:
+        self.sprite <pygame.sprite.Sprite> -- The sprite that collided with a
+                                              group of sprites.
+        self.collided_with <list> -- The group of sprites collided with.
+    """
+
+    def __init__(self, sprites: list, *args: object) -> None:
+        """
+        TODO
+        """
+
+        self.sprite = sprites[0]
+        self.collided_with = sprites[1]
+
+        super().__init__(*args)
+
+class IntersectionCollision(Collision):
     """
     TODO
     """
 
-    def __init__(self):
-      pass
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+class WallCollision(Collision):
+    """
+    TODO
+    """
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 # This class represents the bar at the bottom that the player controls
 class Player(pygame.sprite.Sprite):
@@ -220,7 +248,7 @@ class Player(pygame.sprite.Sprite):
         self.change_y+=y
           
     # Find a new position for the player
-    def update(self,walls,gate):
+    def update(self,walls,gate,intersections=False):
         # Get the old position, in case we need to go back to it
         
         old_x=self.rect.left
@@ -234,19 +262,25 @@ class Player(pygame.sprite.Sprite):
         self.rect.top = new_y
 
         gate_hit = False
+        intersection = False
         collide = pygame.sprite.spritecollide(self, walls, False)
         if gate != False:
           gate_hit = pygame.sprite.spritecollide(self, gate, False)
-        if collide or gate_hit:
-          self.rect.left = old_x
-          self.rect.top = old_y
+        if intersections:
+          intersection = pygame.sprite.spritecollide(self, intersections, False)
+        if collide or gate_hit or intersection:
+          if not intersection:
+            self.rect.left = old_x
+            self.rect.top = old_y
 
           try:
             if type(self) is Ghost:
-              raise WallCollision()
+              if intersection:
+                raise IntersectionCollision([self, intersection])
+              else:
+                raise WallCollision([self, collide if collide else gate_hit])
           except NameError:
             pass
-          
 
 #        # Did this update cause us to hit a wall?
 #        x_collide = pygame.sprite.spritecollide(self, walls, False)
@@ -286,7 +320,7 @@ class Ghost(Player):
     TODO
     """
 
-    speed = 15
+    speed = 5#15
     all_dirs = {'left', 'right', 'up', 'down'}
     move_switch = {'left' :  (speed, 0),
                    'right': (-speed, 0),
@@ -298,6 +332,7 @@ class Ghost(Player):
       TODO
       """
 
+      self.last_intersection = None
       self.prev_dirs = {'down'}
       self.current_dir = 'right'
       self.changespeed(*Ghost.move_switch[self.current_dir])
@@ -320,8 +355,14 @@ class Ghost(Player):
 
       Return the chosen string.
       """
-
-      return random.choice(list(all_dirs.difference(prev_dirs)))
+      print(prev_dirs)
+      dir_choices = list(all_dirs.difference(prev_dirs))
+      if len(dir_choices) > 0:
+          return random.choice(dir_choices)
+      else:
+          print('error')
+          self.prev_dirs = set()
+          return random.choice(list(all_dirs))
 
     # Change the speed of the ghost
     #def changespeed(self,list,ghost,turn,steps,l):
@@ -485,6 +526,40 @@ class Ghost(Player):
 #il = len(Inky_directions)-1
 #cl = len(Clyde_directions)-1
 
+# Intersection Coordinates
+#19 rows, 19 cols
+#block.rect.x = (30*column+6)+26
+#block.rect.y = (30*row+6)+26
+intersections = [(0, 2, {'up', 'down', 'right'}),
+                 (4, 2, {'down', 'left', 'right'}),
+                 (8, 2, {'up', 'left', 'right'}),
+                 (10, 2, {'up', 'left', 'right'}),
+                 (14, 2, {'down', 'left', 'right'}),
+                 (18, 2, {'up', 'down', 'left'}),
+                 (4, 4, {'up', 'left', 'right'}),
+                 (14, 4, {'up', 'left', 'right'}),
+                 (6, 6, {'down', 'left', 'right'}),
+                 (8, 6, {'up', 'left', 'right'}),
+                 (10, 6, {'up', 'left', 'right'}),
+                 (12, 6, {'down', 'left', 'right'}),
+                 (2, 8, {'up', 'down', 'left'}),
+                 (9, 8, {'up', 'left', 'right'}),
+                 (16, 8, {'up', 'down', 'right'}),
+                 (2, 10, {'up', 'left', 'right'}),
+                 (4, 10, {'up', 'down', 'left'}),
+                 (14, 10, {'up', 'down', 'right'}),
+                 (16, 10, {'up', 'left', 'right'}),
+                 (4, 12, {'up', 'left', 'right'}),
+                 (14, 12, {'up', 'left', 'right'}),
+                 (2, 16, {'up', 'down', 'right'}),
+                 (4, 16, {'up', 'left', 'right'}),
+                 (14, 16, {'up', 'left', 'right'}),
+                 (16, 16, {'up', 'down', 'left'}),
+                 (2, 18, {'up', 'left', 'right'}),
+                 (8, 18, {'up', 'left', 'right'}),
+                 (10, 18, {'up', 'left', 'right'}),
+                 (16, 18, {'up', 'left', 'right'})]
+
 # Call this function so the Pygame library can initialize itself
 pygame.init()
   
@@ -547,6 +622,8 @@ def startGame():
 
   block_list = pygame.sprite.RenderPlain()
 
+  intersection_list = pygame.sprite.RenderPlain()
+
   monsta_list = pygame.sprite.RenderPlain()
 
   pacman_collide = pygame.sprite.RenderPlain()
@@ -584,24 +661,32 @@ def startGame():
 
   #Pinky=Ghost(Pinky_directions, w, m_h, "images/Pinky.png",
                                                #[monsta_list, all_sprites_list])
-  Pinky = Ghost(w, b_h, "images/Pinky.png", [monsta_list, all_sprites_list])
+#  Pinky = Ghost(w, b_h, "images/Pinky.png", [monsta_list, all_sprites_list])
   #monsta_list.add(Pinky)
   #all_sprites_list.add(Pinky)
    
   #Inky=Ghost(Inky_directions, i_w, m_h, "images/Inky.png",
                                                #[monsta_list, all_sprites_list])
-  Inky = Ghost(w, b_h, "images/Inky.png", [monsta_list, all_sprites_list])
+#  Inky = Ghost(w, b_h, "images/Inky.png", [monsta_list, all_sprites_list])
   #monsta_list.add(Inky)
   #all_sprites_list.add(Inky)
    
   #Clyde=Ghost(Clyde_directions, c_w, m_h, "images/Clyde.png",
                                 #[monsta_list, all_sprites_list], ghost="clyde")
-  Clyde = Ghost(w, b_h, "images/Clyde.png", [monsta_list, all_sprites_list])
+#  Clyde = Ghost(w, b_h, "images/Clyde.png", [monsta_list, all_sprites_list])
   #monsta_list.add(Clyde)
   #all_sprites_list.add(Clyde)
 
-  ghosts = [Blinky, Pinky, Inky, Clyde]
+  ghosts = [Blinky]#, Pinky, Inky, Clyde]
   num_ghosts = len(ghosts)
+
+  # Place Intersections (for ghost movement)
+  for isect in intersections:
+      intersection = Intersection(6, isect[2], color=green)
+      intersection.rect.x = 30 * isect[0] + 32
+      intersection.rect.y = 30 * isect[1] + 32
+      intersection_list.add(intersection)
+      all_sprites_list.add(intersection)
 
   # Draw the grid
   for row in range(19):
@@ -641,7 +726,7 @@ def startGame():
   
   # Fire a ghost_timer event every 30 seconds
   ghost_timer_id = pygame.event.custom_type()
-  ghost_timer = pygame.event.Event(ghost_timer_id)
+  pygame.event.Event(ghost_timer_id)
   pygame.time.set_timer(ghost_timer_id, 30000)
 
   while done == False:
@@ -691,17 +776,34 @@ def startGame():
         #ghost.changespeed(*Ghost.move_switch[ghost.current_dir])
 
         try:
-          ghost.update(wall_list, False)
-        except WallCollision:
+          ghost.update(wall_list, False, intersection_list)
+
+        except Collision as collision:
+          # Stop moving in current direction
+          # TODO: change name of move_switch to move_dict
           x, y = Ghost.move_switch[ghost.current_dir]
           x *= -1
           y *= -1
           ghost.changespeed(x, y)
-          ghost.prev_dirs.add(ghost.current_dir)
-          ghost.current_dir = ghost.choose_dir(ghost.prev_dirs, Ghost.all_dirs)
-          ghost.changespeed(*Ghost.move_switch[ghost.current_dir])
+
+          if type(collision) is IntersectionCollision:
+            # Move in new direction
+            if ghost.last_intersection is not collision.collided_with[0]:
+                ghost.current_dir = collision.collided_with[0].choose_dir(
+                                                             ghost.current_dir)
+                ghost.changespeed(*Ghost.move_switch[ghost.current_dir])
+                ghost.last_intersection = collision.collided_with[0]
+
+          elif type(collision) is WallCollision:
+            # Move in new direction
+            ghost.prev_dirs.add(ghost.current_dir)
+            ghost.current_dir = ghost.choose_dir(ghost.prev_dirs, Ghost.all_dirs)
+            ghost.changespeed(*Ghost.move_switch[ghost.current_dir])
+            ghost.last_intersection = None
+
         else:
-          ghost.prev_dirs = set()
+            ghost.prev_dirs = set()
+            ghost.last_intersection = None
         #ghost.move(wall_list)
 
       #returned = Pinky.changespeed(Pinky_directions,False,p_turn,p_steps,pl)
@@ -740,10 +842,10 @@ def startGame():
       # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
       screen.fill(black)
         
-      wall_list.draw(screen)
-      gate.draw(screen)
+#      wall_list.draw(screen)
+#      gate.draw(screen)
       all_sprites_list.draw(screen)
-      monsta_list.draw(screen)
+#      monsta_list.draw(screen)
 
       text=font.render("Score: "+str(score)+"/"+str(bll), True, red)
       screen.blit(text, [10, 10])
