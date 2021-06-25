@@ -28,10 +28,31 @@ pygame.mixer.music.play(-1, 0.0)
 
 # This class represents the bar at the bottom that the player controls
 class Wall(pygame.sprite.Sprite):
-    # Constructor function
-    def __init__(self,x,y,width,height, color):
+    """
+    A visible obstruction to moving sprites
+
+    Instance Variables:
+        image <pygame.Surface>: -- The visual representation of the wall.
+        rect <pygame.Rect>: -- Rectangular coordinates of the wall.
+                               x and y positions can be changed by setting
+                               self.rect.left and self.rect.top.
+    """
+
+    def __init__(self, x: int, y: int, width: int, height: int, color: tuple):
+        """
+        Initialize the wall.
+
+        Arguments:
+            x:      -- x Coordinate of the top left corner of the wall.
+            y:      -- y Coordinate of the top left corner of the wall.
+            width:  -- Horizontal size of the wall.
+            height: -- Vertical size of the wall.
+            color:  -- Contains 3 int values representing R, G, and B.
+                       The image Surface will be filled with this color.
+        """
+
         # Call the parent's constructor
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
   
         # Make a blue wall, of the size specified in the parameters
         self.image = pygame.Surface([width, height])
@@ -105,26 +126,36 @@ def setupGate(all_sprites_group):
 
 class Block(pygame.sprite.Sprite):
     """
-    This class represents the ball/dots,
-    it derives from the "Sprite" class in Pygame.
+    Represents the ball/dots.
 
-    Interface:
-        self.rect.x -- X position of the block
-        self.rect.y -- Y position of the block
+    Instance Variables:
+        image <pygame.Surface>: -- The visual representation of the block.
+        rect <pygame.Rect>: -- Rectangular coordinates of the block.
+                        x and y positions can be changed by setting
+                        self.rect.x and self.rect.y.
     """
      
     # Constructor. Pass in the color of the block, 
     # and its x and y position
-    def __init__(self, color, width, height):
+    def __init__(self, width, height, color):
+        """
+        Initialize the block.
+
+        Arguments:
+            width:  -- Horizontal size of the block.
+            height: -- Vertical size of the block.
+            color:  -- Contains 3 int values representing R, G, and B.
+                       The image Surface will be filled with this color.
+        """
         # Call the parent class (Sprite) constructor
-        pygame.sprite.Sprite.__init__(self) 
+        super().__init__()
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
         self.image = pygame.Surface([width, height])
         self.image.fill(white)
         self.image.set_colorkey(white)
-        pygame.draw.ellipse(self.image,color,[0,0,width,height])
+        pygame.draw.ellipse(self.image, color, [0, 0, width, height])
  
         # Fetch the rectangle object that has the dimensions of the image
         # image.
@@ -134,13 +165,29 @@ class Block(pygame.sprite.Sprite):
 
 class Intersection(Block):
     """
-    TODO
+    A section which splits into multiple paths.
+
+    Used for mob pathfinding. If a mob collides with this, the choose_dir()
+    method can be invoked to potentially select a new movement direction.
+
+    Public Methods:
+        choose_dir(current_dir: str) -> str
+
+    Instance Variables:
+        directions <set: str>: -- The paths that the intersection feeds into.
     """
 
     @staticmethod
-    def switcher(subset, superset1, superset2):
+    def switcher(subset: set, superset1: set, superset2: set) -> set:
         """
-        TODO
+        Choose the set that is a superset of subset.
+
+        If neither set is a superset, then choose the subset instead.
+
+        Arguments:
+            subset:    -- The subset key.
+            superset1: -- The first superset to query.
+            superset2: -- The second superset to query.
         """
 
         if subset.issubset(superset1):
@@ -155,14 +202,40 @@ class Intersection(Block):
     switch = {horizontals:   verticals,
               verticals  : horizontals}
 
-    def __init__(self, width, directions, color=black):
-        super().__init__(color, width, width)
+    def __init__(self, width: int, directions: set, color=black):
+        """
+        Initialize the Intersection.
+
+        Arguments:
+            width:      -- The size of the intersection (also the height).
+            directions: -- The possible paths to branch out to.
+
+        Keyword Arguments:
+            color <tuple: int>: -- Used for debugging, or if the background is
+                                   a color other than black. (default (0,0,0)).
+        """
+
+        super().__init__(width, width, color)
         self.directions = directions
 
-    def choose_dir(self, current_dir):
+    def choose_dir(self, current_dir: str) -> str:
         """
-        TODO
+        Randomly determine what direction to change to, if any.
+
+        Randomly decide whether to change directions. If not changing
+        directions, then keep moving in the same direction as before.
+        Otherwise, if currently moving in a horizontal direction, choose
+        between possible vertical directions, if moving in a vertical
+        direction, choose between possible horizontal directions. All choices
+        are made randomly.
+
+        Arguments:
+            current_dir: -- The direction being moved in prior to reaching the
+                            intersection.
+
+        Return the direction to move in from the intersection.
         """
+
         #debug
         #print('current:', current_dir, 'possible:', self.directions)
         cls = Intersection
@@ -180,7 +253,9 @@ class Intersection(Block):
 
 class Collision(Exception):
     """
-    TODO
+    An exception that can be thrown during collisions
+
+    Can be subclassed to differentiate between different types of collision.
 
     Instance Variables:
         self.sprite <pygame.sprite.Sprite> -- The sprite that collided with a
@@ -190,7 +265,16 @@ class Collision(Exception):
 
     def __init__(self, sprites: list, *args: object) -> None:
         """
-        TODO
+        Initialize the Collision exception.
+
+        Mostly the same as the base exception class except it contains extra
+        info about the collision.
+
+        Arguments:
+            sprites: -- The list of sprites involved in the collision.
+                        The second element is a list of pygame Sprites that
+                        collided with the first element.
+            args: -- Standard arguments to (not) be fed into an exception.
         """
 
         self.sprite = sprites[0]
@@ -199,29 +283,46 @@ class Collision(Exception):
         super().__init__(*args)
 
 class IntersectionCollision(Collision):
-    """
-    TODO
-    """
+    """An exception to throw during collisions with Intersection objects."""
 
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
 class WallCollision(Collision):
-    """
-    TODO
-    """
+    """An exception to throw during collisions with Wall objects."""
 
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
-# This class represents the bar at the bottom that the player controls
 class Player(pygame.sprite.Sprite):
+    """
+    The Sprite that can be controlled by the user.
+
+    Can be subclassed to make enemies.
+
+    Public Methods:
+        changespeed(x: int, y: int)
+        update(self, walls, gate, intersections=False)
+
+    Instance Variables:
+        image <pygame.Surface>: -- The visual representation of the player.
+        filename <str>:         -- The name of the image file to load.
+        rect <pygame.Rect>:     -- Rectangular coordinates of the player.
+                                   x and y positions can be changed by setting
+                                   self.rect.left and self.rect.top.
+        prev_x <int>: -- The x coordinate from before an update.
+        prev_y <int>: -- The y coordinate from before an update.
+
+    """
   
     # Set speed vector
-    change_x=0
-    change_y=0
+    change_x = 0
+    change_y = 0
   
     def __init__(self, x, y, filename, groups) -> None:
+        """
+        """
+
         super().__init__()
    
         # Set height, width
@@ -232,36 +333,33 @@ class Player(pygame.sprite.Sprite):
   
         # Make our top-left corner the passed-in location.
         self.rect = self.image.get_rect()
-        self.rect.top = y
         self.rect.left = x
+        self.rect.top = y
         self.prev_x = x
         self.prev_y = y
 
         for group in groups:
             group.add(self)
 
-    # Clear the speed of the player
-    def prevdirection(self):
-        self.prev_x = self.change_x
-        self.prev_y = self.change_y
+    def changespeed(self, x: int, y: int):
+        """
+        """
 
-    # Change the speed of the player
-    def changespeed(self,x,y):
-        self.change_x+=x
-        self.change_y+=y
+        self.change_x += x
+        self.change_y += y
           
-    # Find a new position for the player
-    def update(self,walls,gate,intersections=False):
+    def update(self, walls, gate, intersections=False):
+        """
+        """
+        
         # Get the old position, in case we need to go back to it
-        
-        old_x=self.rect.left
-        new_x=old_x+self.change_x
-        prev_x=old_x+self.prev_x
+        old_x = self.rect.left
+        old_y = self.rect.top
+
+        # Determine new positions
+        new_x = old_x + self.change_x
         self.rect.left = new_x
-        
-        old_y=self.rect.top
-        new_y=old_y+self.change_y
-        prev_y=old_y+self.prev_y
+        new_y = old_y + self.change_y
         self.rect.top = new_y
 
         gate_hit = False
@@ -456,7 +554,7 @@ def startGame():
               continue
           else:
               # Spawn the blocks/dots
-              block = Block(yellow, 4, 4)
+              block = Block(4, 4, yellow)
 
               # Set the block positions so that they are spaced out
               block.rect.x = 30 * column + 32
