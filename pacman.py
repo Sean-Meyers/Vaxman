@@ -159,7 +159,8 @@ class Intersection(Block):
         """
         TODO
         """
-        print('current:', current_dir, 'possible:', self.directions)
+        #debug
+        #print('current:', current_dir, 'possible:', self.directions)
         cls = Intersection
         change = random.choice([True, False])
         if change:
@@ -267,7 +268,7 @@ class Player(pygame.sprite.Sprite):
         if gate != False:
           gate_hit = pygame.sprite.spritecollide(self, gate, False)
         if intersections:
-          intersection = pygame.sprite.spritecollide(self, intersections, False)
+          intersection = pygame.sprite.spritecollide(self, intersections, False, collided=pygame.sprite.collide_rect_ratio(.25))
         if collide or gate_hit or intersection:
           if not intersection:
             self.rect.left = old_x
@@ -320,7 +321,7 @@ class Ghost(Player):
     TODO
     """
 
-    speed = 5#15
+    speed = 15
     all_dirs = {'left', 'right', 'up', 'down'}
     move_switch = {'left' :  (speed, 0),
                    'right': (-speed, 0),
@@ -355,7 +356,8 @@ class Ghost(Player):
 
       Return the chosen string.
       """
-      print(prev_dirs)
+      #debug
+      #print(prev_dirs)
       dir_choices = list(all_dirs.difference(prev_dirs))
       if len(dir_choices) > 0:
           return random.choice(dir_choices)
@@ -661,23 +663,23 @@ def startGame():
 
   #Pinky=Ghost(Pinky_directions, w, m_h, "images/Pinky.png",
                                                #[monsta_list, all_sprites_list])
-#  Pinky = Ghost(w, b_h, "images/Pinky.png", [monsta_list, all_sprites_list])
+  Pinky = Ghost(w, b_h, "images/Pinky.png", [monsta_list, all_sprites_list])
   #monsta_list.add(Pinky)
   #all_sprites_list.add(Pinky)
    
   #Inky=Ghost(Inky_directions, i_w, m_h, "images/Inky.png",
                                                #[monsta_list, all_sprites_list])
-#  Inky = Ghost(w, b_h, "images/Inky.png", [monsta_list, all_sprites_list])
+  Inky = Ghost(w, b_h, "images/Inky.png", [monsta_list, all_sprites_list])
   #monsta_list.add(Inky)
   #all_sprites_list.add(Inky)
    
   #Clyde=Ghost(Clyde_directions, c_w, m_h, "images/Clyde.png",
                                 #[monsta_list, all_sprites_list], ghost="clyde")
-#  Clyde = Ghost(w, b_h, "images/Clyde.png", [monsta_list, all_sprites_list])
+  Clyde = Ghost(w, b_h, "images/Clyde.png", [monsta_list, all_sprites_list])
   #monsta_list.add(Clyde)
   #all_sprites_list.add(Clyde)
 
-  ghosts = [Blinky]#, Pinky, Inky, Clyde]
+  ghosts = [Blinky, Pinky, Inky, Clyde]
   num_ghosts = len(ghosts)
 
   # Place Intersections (for ghost movement)
@@ -735,10 +737,11 @@ def startGame():
           if event.type == pygame.QUIT:
               done=True
 
-          if event.type == pygame.MOUSEBUTTONDOWN:
-              print(event.pos)
-          if event.type == pygame.MOUSEBUTTONUP:
-              print(event.pos)
+          #debug
+          #if event.type == pygame.MOUSEBUTTONDOWN:
+          #    print(event.pos)
+          #if event.type == pygame.MOUSEBUTTONUP:
+          #    print(event.pos)
           
           # Increase the speed of the player once when a key is pressed
           if event.type == pygame.KEYDOWN:
