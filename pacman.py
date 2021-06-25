@@ -217,10 +217,8 @@ class Player(pygame.sprite.Sprite):
     change_x=0
     change_y=0
   
-    # Constructor function
-    def __init__(self,x,y, filename, groups):
-        # Call the parent's constructor
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, x, y, filename, groups) -> None:
+        super().__init__()
    
         # Set height, width
         self.image = pygame.image.load(filename).convert()
@@ -328,43 +326,54 @@ class Ghost(Player):
                    'up'   :  (0, speed),
                    'down' : (0, -speed)}
 
-    def __init__(self, *argv):#, directions, *argv, ghost=False):
-      """
-      TODO
-      """
+    def __init__(self, x, y, filename, groups):
+        """
+        TODO
+        """
 
-      self.last_intersection = None
-      self.prev_dirs = {'down'}
-      self.current_dir = 'right'
-      self.changespeed(*Ghost.move_switch[self.current_dir])
+        self.last_intersection = None
+        self.prev_dirs = {'down'}
+        self.current_dir = 'right'
+        self.changespeed(*Ghost.move_switch[self.current_dir])
 
-      #self.directions = directions
-      #self.ghost = ghost
-      #self.turn = 0
-      #self.steps = 0
-      #self.dir_len = len(directions) - 1
-
-      Player.__init__(self, *argv)
+        super().__init__(x, y, filename, groups)
 
     def choose_dir(self, prev_dirs, all_dirs):
-      """
-      Randomly choose a new direction.
+        """
+        Randomly choose a new direction.
 
-      Parameters:
-          prev_dirs <set: str> -- The set of previous direction strings.
-          all_dirs <set: str> -- The set of all possible direction strings.
+        Parameters:
+            prev_dirs <set: str> -- The set of previous direction strings.
+            all_dirs <set: str> -- The set of all possible direction strings.
 
-      Return the chosen string.
-      """
-      #debug
-      #print(prev_dirs)
-      dir_choices = list(all_dirs.difference(prev_dirs))
-      if len(dir_choices) > 0:
-          return random.choice(dir_choices)
-      else:
-          print('error')
-          self.prev_dirs = set()
-          return random.choice(list(all_dirs))
+        Return the chosen string.
+        """
+        #debug
+        #print(prev_dirs)
+        dir_choices = list(all_dirs.difference(prev_dirs))
+        if len(dir_choices) > 0:
+            return random.choice(dir_choices)
+        else:
+            print('error')
+            self.prev_dirs = set()
+            return random.choice(list(all_dirs))
+
+    def __mul__(self, num: int) -> list:
+        """
+        TODO
+
+        Side Effects:
+            Automatically adds the new ghosts to the same pygame sprite groups
+            as the original.
+        """
+
+        new_ghosts = []
+        if num > 0:
+            new_ghosts.append(self)
+            for i in range(num - 1):
+                new_ghosts.append(Ghost(self.rect.left, self.rect.top,
+                                                 self.filename, self.groups()))
+        return new_ghosts
 
     # Change the speed of the ghost
     #def changespeed(self,list,ghost,turn,steps,l):
@@ -598,24 +607,24 @@ b_h = (3*60)+19 #Binky height
 i_w = 303-16-32 #Inky width
 c_w = 303+(32-16) #Clyde width
 
-def multiply_ghost(ghost):
-    """
-    Duplicate the ghost if it is alive.
-
-    Parameters:
-        ghost <Ghost> -- The ghost to duplicate.
-
-    Return the number of ghosts created.
-    """
-
-    if ghost.alive():
-        #Ghost(ghost.directions, ghost.rect.left, ghost.rect.top,
-        #                     ghost.filename, ghost.groups(), ghost=ghost.ghost)
-        Ghost(ghost.rect.left, ghost.rect.top, ghost.filename, ghost.groups())
-
-        return 1
-    else:
-        return 0
+#def multiply_ghost(ghost):
+#    """
+#    Duplicate the ghost if it is alive.
+#
+#    Parameters:
+#        ghost <Ghost> -- The ghost to duplicate.
+#
+#    Return the number of ghosts created.
+#    """
+#
+#    if ghost.alive():
+#        #Ghost(ghost.directions, ghost.rect.left, ghost.rect.top,
+#        #                     ghost.filename, ghost.groups(), ghost=ghost.#ghost)
+#        Ghost(ghost.rect.left, ghost.rect.top, ghost.filename, ghost.groups())
+#
+#        return 1
+#    else:
+#        return 0
 
 def startGame():
 
@@ -626,7 +635,7 @@ def startGame():
 
   intersection_list = pygame.sprite.RenderPlain()
 
-  monsta_list = pygame.sprite.RenderPlain()
+  monsta_group = pygame.sprite.RenderPlain()
 
   pacman_collide = pygame.sprite.RenderPlain()
 
@@ -655,32 +664,31 @@ def startGame():
   #pacman_collide.add(Pacman)
    
 #  Blinky=Ghost(Blinky_directions, w, b_h, "images/Blinky.png",
-#                                               [monsta_list, all_sprites_list])
+#                                               [monsta_group, all_sprites_list])
 
-  Blinky = Ghost(w, b_h, "images/Blinky.png", [monsta_list, all_sprites_list])
-  #monsta_list.add(Blinky)
+  Blinky = Ghost(w, b_h, "images/Blinky.png", [monsta_group, all_sprites_list])
+  #monsta_group.add(Blinky)
   #all_sprites_list.add(Blinky)
 
   #Pinky=Ghost(Pinky_directions, w, m_h, "images/Pinky.png",
-                                               #[monsta_list, all_sprites_list])
-  Pinky = Ghost(w, b_h, "images/Pinky.png", [monsta_list, all_sprites_list])
-  #monsta_list.add(Pinky)
+                                               #[monsta_group, all_sprites_list])
+  Pinky = Ghost(w, b_h, "images/Pinky.png", [monsta_group, all_sprites_list])
+  #monsta_group.add(Pinky)
   #all_sprites_list.add(Pinky)
    
   #Inky=Ghost(Inky_directions, i_w, m_h, "images/Inky.png",
-                                               #[monsta_list, all_sprites_list])
-  Inky = Ghost(w, b_h, "images/Inky.png", [monsta_list, all_sprites_list])
-  #monsta_list.add(Inky)
+                                               #[monsta_group, all_sprites_list])
+  Inky = Ghost(w, b_h, "images/Inky.png", [monsta_group, all_sprites_list])
+  #monsta_group.add(Inky)
   #all_sprites_list.add(Inky)
    
   #Clyde=Ghost(Clyde_directions, c_w, m_h, "images/Clyde.png",
-                                #[monsta_list, all_sprites_list], ghost="clyde")
-  Clyde = Ghost(w, b_h, "images/Clyde.png", [monsta_list, all_sprites_list])
-  #monsta_list.add(Clyde)
+                                #[monsta_group, all_sprites_list], ghost="clyde")
+  Clyde = Ghost(w, b_h, "images/Clyde.png", [monsta_group, all_sprites_list])
+  #monsta_group.add(Clyde)
   #all_sprites_list.add(Clyde)
 
-  ghosts = [Blinky, Pinky, Inky, Clyde]
-  num_ghosts = len(ghosts)
+  num_ghosts = len(monsta_group)
 
   # Place Intersections (for ghost movement)
   for isect in intersections:
@@ -764,18 +772,21 @@ def startGame():
                   Pacman.changespeed(0,30)
               if event.key == pygame.K_DOWN:
                   Pacman.changespeed(0,-30)
-          
-          # May not work yet
+      
+          # Multiply ghosts every 30 seconds
           if event.type == ghost_timer_id:
-              for ghost in ghosts:
-                  num_ghosts += multiply_ghost(ghost)
+              for ghost in monsta_group.sprites():
+                  ghost * 2
+                  #num_ghosts += multiply_ghost(ghost)
+              #debug
+              #print(len(monsta_group))
           
       # ALL EVENT PROCESSING SHOULD GO ABOVE THIS COMMENT
    
       # ALL GAME LOGIC SHOULD GO BELOW THIS COMMENT
       Pacman.update(wall_list,gate)
 
-      for ghost in monsta_list:
+      for ghost in monsta_group:
         #ghost.changespeed(*Ghost.move_switch[ghost.current_dir])
 
         try:
@@ -848,18 +859,20 @@ def startGame():
 #      wall_list.draw(screen)
 #      gate.draw(screen)
       all_sprites_list.draw(screen)
-#      monsta_list.draw(screen)
+#      monsta_group.draw(screen)
 
       text=font.render("Score: "+str(score)+"/"+str(bll), True, red)
       screen.blit(text, [10, 10])
 
       if score == bll:
-        doNext("Congratulations, you won!",145,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
+        doNext("Congratulations, you won!",145,all_sprites_list,block_list,monsta_group,pacman_collide,wall_list,gate)
 
-      monsta_hit_list = pygame.sprite.spritecollide(Pacman, monsta_list, False)
+      monsta_hit_list = pygame.sprite.spritecollide(Pacman, monsta_group, False)
 
-      if monsta_hit_list:
-        doNext("Game Over",235,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
+#      if monsta_hit_list:
+      if len(monsta_group) == 32 * num_ghosts:
+          doNext("Game Over", 235, all_sprites_list, block_list,
+                                 monsta_group, pacman_collide, wall_list, gate)
 
       # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
       
@@ -867,7 +880,7 @@ def startGame():
     
       clock.tick(10)
 
-def doNext(message,left,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate):
+def doNext(message,left,all_sprites_list,block_list,monsta_group,pacman_collide,wall_list,gate):
   while True:
       # ALL EVENT PROCESSING SHOULD GO BELOW THIS COMMENT
       for event in pygame.event.get():
@@ -879,7 +892,7 @@ def doNext(message,left,all_sprites_list,block_list,monsta_list,pacman_collide,w
           if event.key == pygame.K_RETURN:
             del all_sprites_list
             del block_list
-            del monsta_list
+            del monsta_group
             del pacman_collide
             del wall_list
             del gate
