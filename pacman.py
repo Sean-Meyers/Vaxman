@@ -31,7 +31,7 @@ class Wall(pygame.sprite.Sprite):
     """
     A visible obstruction to moving sprites
 
-    Instance Variables:
+    Instance Attributes:
         image <pygame.Surface>: -- The visual representation of the wall.
         rect <pygame.Rect>: -- Rectangular coordinates of the wall.
                                x and y positions can be changed by setting
@@ -42,7 +42,7 @@ class Wall(pygame.sprite.Sprite):
         """
         Initialize the wall.
 
-        Arguments:
+        Parameters:
             x:      -- x Coordinate of the top left corner of the wall.
             y:      -- y Coordinate of the top left corner of the wall.
             width:  -- Horizontal size of the wall.
@@ -128,7 +128,7 @@ class Block(pygame.sprite.Sprite):
     """
     Represents the ball/dots.
 
-    Instance Variables:
+    Instance Attributes:
         image <pygame.Surface>: -- The visual representation of the block.
         rect <pygame.Rect>: -- Rectangular coordinates of the block.
                         x and y positions can be changed by setting
@@ -141,7 +141,7 @@ class Block(pygame.sprite.Sprite):
         """
         Initialize the block.
 
-        Arguments:
+        Parameters:
             width:  -- Horizontal size of the block.
             height: -- Vertical size of the block.
             color:  -- Contains 3 int values representing R, G, and B.
@@ -173,7 +173,7 @@ class Intersection(Block):
     Public Methods:
         choose_dir(current_dir: str) -> str
 
-    Instance Variables:
+    Instance Attributes:
         directions <set: str>: -- The paths that the intersection feeds into.
     """
 
@@ -184,7 +184,7 @@ class Intersection(Block):
 
         If neither set is a superset, then choose the subset instead.
 
-        Arguments:
+        Parameters:
             subset:    -- The subset key.
             superset1: -- The first superset to query.
             superset2: -- The second superset to query.
@@ -206,7 +206,7 @@ class Intersection(Block):
         """
         Initialize the Intersection.
 
-        Arguments:
+        Parameters:
             width:      -- The size of the intersection (also the height).
             directions: -- The possible paths to branch out to.
 
@@ -229,7 +229,7 @@ class Intersection(Block):
         direction, choose between possible horizontal directions. All choices
         are made randomly.
 
-        Arguments:
+        Parameters:
             current_dir: -- The direction being moved in prior to reaching the
                             intersection.
 
@@ -257,7 +257,7 @@ class Collision(Exception):
 
     Can be subclassed to differentiate between different types of collision.
 
-    Instance Variables:
+    Instance Attributes:
         self.sprite <pygame.sprite.Sprite> -- The sprite that collided with a
                                               group of sprites.
         self.collided_with <list> -- The group of sprites collided with.
@@ -270,7 +270,7 @@ class Collision(Exception):
         Mostly the same as the base exception class except it contains extra
         info about the collision.
 
-        Arguments:
+        Parameters:
             sprites: -- The list of sprites involved in the collision.
                         The second element is a list of pygame Sprites that
                         collided with the first element.
@@ -303,8 +303,9 @@ class Player(pygame.sprite.Sprite):
     Public Methods:
         changespeed(x: int, y: int)
         update(self, walls, gate, intersections=False)
+        reset_speed()
 
-    Instance Variables:
+    Instance Attributes:
         image <pygame.Surface>: -- The visual representation of the player.
         filename <str>:         -- The name of the image file to load.
         rect <pygame.Rect>:     -- Rectangular coordinates of the player.
@@ -313,14 +314,25 @@ class Player(pygame.sprite.Sprite):
         prev_x <int>: -- The x coordinate from before an update.
         prev_y <int>: -- The y coordinate from before an update.
 
+    Class Attributes
+        change_x <int>: -- Initial x speed vector.
+        change_y <int>: -- Initial y speed vector.
     """
   
     # Set speed vector
     change_x = 0
     change_y = 0
   
-    def __init__(self, x, y, filename, groups) -> None:
+    def __init__(self, x: int, y: int, filename: str, groups: list) -> None:
         """
+        Initialize the Player object.
+
+        Parameters:
+            x: -- Starting x-coordinate of the top-left corner of the Player.
+            y: -- Starting y-coordinate of the top-left corner of the Player.
+            filename: -- Filname of the image to use as the sprite.
+            groups: -- List of pygame group objects to add the sprite to.
+        TODO: remove groups and pass the groups to the Sprite constructor instead.
         """
 
         super().__init__()
@@ -341,8 +353,23 @@ class Player(pygame.sprite.Sprite):
         for group in groups:
             group.add(self)
 
+    def reset_speed(self):
+        """Set the instance's speed to the Player class' default."""
+
+        self.change_x = Player.change_x
+        self.change_y = Player.change_y
+
     def changespeed(self, x: int, y: int):
         """
+        Change how many pixels the instance will move by each frame.
+
+        X and Y speed components are initially set to the class defaults.
+        Calling this method adds or subtracts the supplied arguments from the
+        instance's existing speed values.
+
+        Parameters:
+            x: -- The amount the x component of the speed should be changed by.
+            y: -- The amount the y component of the speed should be changed by.
         """
 
         self.change_x += x
@@ -350,6 +377,43 @@ class Player(pygame.sprite.Sprite):
           
     def update(self, walls, gate, intersections=False):
         """
+        Update the position of the instance.
+
+        Determine if there were any collisions. Handles collisions differently
+        depending on the sprites involved.
+
+        Parameters:
+            walls <pygame.sprite.Group>
+                -- The Group of walls to test for collisions with. Any sprite
+                   that would move through a wall will have its position reset
+                   to its previous values. If the instance is a Ghost, a
+                   WallCollision exception will be raised, which can be
+                   handled to help AI pathfinding.
+            gate <pygame.sprite.Group>
+                -- If the argument passed to this parameter is not False, then
+                   this method will determine whether the sprite collided with
+                   any gates, and if it did, its position will be reset to
+                   previous values to prevent it from moving through them. If
+                   the instance is a Ghost, a WallCollision exception will be
+                   raised, which can be handled to help AI pathfinding.
+
+        Keyword Arguments:
+            intersections <pygame.sprite.Group>
+                -- If a group of intersections is supplied, this method will
+                   determine whether the sprite passed through any
+                   Intersection objects in the group, if so, it will raise an
+                   IntersectionCollision exception, which can be handled to
+                   help AI pathfinding. If a sprite collides with an
+                   intersection, its position will not be reset. (Default:
+                   False).
+
+        Exceptions Raised:
+            IntersectionCollision
+                -- Derived from the Collision exception. Raised if a sprite
+                   collided with an intersection.
+            WallCollision
+                -- Derived from the Collision exception. Raised if a sprite
+                   collided with a wall.
         """
         
         # Get the old position, in case we need to go back to it
@@ -364,37 +428,63 @@ class Player(pygame.sprite.Sprite):
 
         gate_hit = False
         intersection = False
+
+        # Check for collisions
         collide = pygame.sprite.spritecollide(self, walls, False)
         if gate != False:
-          gate_hit = pygame.sprite.spritecollide(self, gate, False)
+            gate_hit = pygame.sprite.spritecollide(self, gate, False)
         if intersections:
-          intersection = pygame.sprite.spritecollide(self, intersections, False, collided=pygame.sprite.collide_rect_ratio(.25))
+            intersection = pygame.sprite.spritecollide(self, intersections,
+                        False, collided=pygame.sprite.collide_rect_ratio(.25))
         if collide or gate_hit or intersection:
-          if not intersection:
-            self.rect.left = old_x
-            self.rect.top = old_y
+            if not intersection:
+                self.rect.left = old_x
+                self.rect.top = old_y
 
-          try:
+        # Raise Collision exception if the calling object is a Ghost
+        try:
             if type(self) is Ghost:
-              if intersection:
-                raise IntersectionCollision([self, intersection])
-              else:
-                raise WallCollision([self, collide if collide else gate_hit])
-          except NameError:
+                if intersection:
+                    raise IntersectionCollision([self, intersection])
+                else:
+                    raise WallCollision(
+                                    [self, collide if collide else gate_hit])
+        except NameError:
             pass
 
 #Inheritime Player klassist
 class Ghost(Player):
     """
-    TODO
+    A computer controlled enemy mob.
+
+    Public Methods:
+        choose_dir(prev_dirs, all_dirs) -> str
+
+    Instance Attributes:
+        last_intersection <Intersection>
+            -- The intersection this ghost collided with in the previous
+               frame. If the last intersection is the same as the intersection
+               this ghost is currently colliding with, the current collision
+               is ignored.
+        prev_dirs <set: str>
+            -- The set of directions this ghost previously tried moving in. If
+               there was a WallCollision, the direction this ghost moved
+               before the collision is added to the set of previous
+               directions. If there was no collision, prev_dirs is assigned
+               with an empty set. The previous directions are excluded from
+               the possible directions that the ghost may move in next.
+        current_dir <str> -- The direction this ghost is currently moving in.
+
+    Class Attributes:
+        speed <int> -- The magnitude that speed should be changed by for Ghosts.
     """
 
     speed = 30
     all_dirs = {'left', 'right', 'up', 'down'}
     move_dict = {'left' :  (speed, 0),
-                   'right': (-speed, 0),
-                   'up'   :  (0, speed),
-                   'down' : (0, -speed)}
+                 'right': (-speed, 0),
+                 'up'   :  (0, speed),
+                 'down' : (0, -speed)}
 
     def __init__(self, x, y, filename, groups):
         """
@@ -408,7 +498,7 @@ class Ghost(Player):
 
         super().__init__(x, y, filename, groups)
 
-    def choose_dir(self, prev_dirs, all_dirs):
+    def choose_dir(self, prev_dirs, all_dirs) -> str:
         """
         Randomly choose a new direction.
 
@@ -606,6 +696,7 @@ def startGame():
                   Pacman.changespeed(0,30)
 
           # Decrease the speed when the key is released
+          # TODO: Make a Player method to reset speed (just set change_x, etc to 0)
           if event.type == pygame.KEYUP:
               if event.key == pygame.K_LEFT:
                   Pacman.changespeed(30,0)
@@ -626,7 +717,7 @@ def startGame():
       # ALL EVENT PROCESSING SHOULD GO ABOVE THIS COMMENT
    
       # ALL GAME LOGIC SHOULD GO BELOW THIS COMMENT
-      Pacman.update(wall_group,gate)
+      Pacman.update(wall_group, gate)
 
       for ghost in monsta_group:
         try:
