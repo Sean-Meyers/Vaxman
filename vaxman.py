@@ -1,6 +1,7 @@
 """
 Vaxman Prototype
 Author: Sean Meyers
+Git Repo: https://github.com/Sean-Meyers/Vaxman
 Forked from: https://github.com/hbokmann/Pacman
 Date: Aug 23, 2021
 
