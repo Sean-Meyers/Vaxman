@@ -1,36 +1,32 @@
-### Pacman in Python with PyGame
+### Vaxman is like Pacman but with a V.
 
-This is a very minimal implementation of the Pacman game, having only one level and without ghosts strategy, not even with random movements (yes, the routes are programmed). However, we may improve this game in the future and everyone else interested can feel free to fork and contribute to this project.
-
-Download installer from here: https://github.com/hbokmann/Pacman/blob/master/pacman.exe
+In Vaxman, you need to collect all the yellow dots before the coronavirus ghosts take over your screen. Every 30 seconds each corona-ghost will spilt itself in two, once the number ghostVID19s reaches 32 times their starting number (that'd be 128), the pacman race will be wiped out. That's bad. Fear not, no viral specter can survive being rammed with your uber covid-19 vaccination!
+Made for Electronic Art's Forage task 1.
 
 ![Pacman Game Window](https://raw.github.com/hbokmann/Pacman/master/images/pacman.jpg)
 
 
 # Future development
 
-* Fix Pacman's movement
-* Ghosts moving algorithm and artificial intelligence
-* Better design
-* Better algorithm for the walls
-* Additional levels?
+* Rewrite code for style consistency, less redundancy, and just plain more better
+* Make covid ghosts run away when vaxman is within their line of sight
+* Change sprites to more lore-relevant images
+* Esc should pause the game
+* Fix bug: Win screen displays when window is closed after winning the game once
+* Fix bug: Raised exception when quitting the game in some cases.
+* Fix bug: Intersection dots are drawn on top of entities in some cases.
 
+# Alternate design idea
 
-Tested with [PyGame 1.9](http://pygame.org/ftp/pygame-1.9.2a0.win32-py3.2.msi ) and [Python 3.2 32bit](http://www.python.org/ftp/python/3.2.3/python-3.2.3.msi)
+* Ghosts enter the field every time interval
+* Game starts with one infected ghost, which spreads the plague
+* Ghosts either die or recover from covid
+* Vaxman can get and spread covid too
+* After awhile, vaccines appear in the game, which when collected allow vaxman to immunize ghosts, preventing them from being infected
+* Once all ghosts are vaccinated the game is won
+* If all ghosts or vaxman dies, the game is lost
 
+Tested with PyGame 2.0.1 and Python 3.9.1 64bit
 
 ### Additional resources
-* [Pac-Man Dossier - strategy of the ghosts movement](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html)
-* [HTML5 Pacman](http://arandomurl.com/2010/07/25/html5-pacman.html)
-* [PyGame tutorials](http://programarcadegames.com/index.php?lang=en)
-* [How To Write a Pacman Game in JavaScript](http://www.masswerk.at/JavaPac/pacman-howto.html)
-* [Original Pacman game](http://originalpacman.com/)
-
-
-
-### Support or Contact
-Blog: http://www.bokmann.com
-
-Twitter: https://twitter.com/hbokmann
-
-Email: hans@bokmann.com
+* See https://github.com/hbokmann/Pacman
